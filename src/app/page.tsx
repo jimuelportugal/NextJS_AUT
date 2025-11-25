@@ -129,7 +129,7 @@ export default function Home() {
           <NavBar />
         </div>
       </header>
-      <div className="pl-25 pt-20 max-w-5xl mx-auto text-center flex flex-row h-auto">
+      <div className="pl-30 pt-35 max-w-5xl mx-auto text-center flex flex-row h-auto">
         <Card className="bg-[#424769] border-none rounded-l-lg rounded-r-none text-white shadow-2xl border border-gray-700 backdrop-blur-sm duration-300">
           <CardContent>
             <div>

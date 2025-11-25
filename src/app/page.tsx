@@ -13,7 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
+// hover:scale-[1.02]
+// hover:shadow-indigo-500/30
 export default function Home() {
   return (
     <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
@@ -22,33 +23,40 @@ export default function Home() {
           <NavBar />
         </div>
       </header>
-      <div className="pl-25 pt-80 max-w-7xl mx-auto text-center">
-        <Card className="bg-[#424769] border-none text-white shadow-2xl hover:shadow-indigo-500/30 hover:scale-[1.02] border border-gray-700 backdrop-blur-sm rounded-xl duration-300">
+      <div className="pl-25 pt-20 max-w-5xl mx-auto text-center flex flex-row">
+        <Card className="bg-[#424769] border-none rounded-none text-white shadow-2xl border border-gray-700 backdrop-blur-sm duration-300">
           <CardContent>
-            <div className="flex flex-row">
+            <div>
               <div className="basis-50">
                 <Tabs defaultValue="account" className="w-[400px]">
-                  <TabsList>
-                    <TabsTrigger value="account">Login</TabsTrigger>
-                    <TabsTrigger value="password">Register</TabsTrigger>
+                  <TabsList className="bg-[#3d4254]">
+                    <TabsTrigger className="bg-[#3d4254]" value="login">Login</TabsTrigger>
+                    <TabsTrigger className="bg-[#3d4254]" value="register">Register</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="account" className="bg-[#424769]">
-                      <Card className="w-full p-6 bg-[#424769] border-none">
-                        <h1 className="text-xl font-bold mb-4 text-white">Login</h1>
-                          <Input placeholder="Username" className="bg-[#676fgd]"/>
-                          <Input type="password" placeholder="Password"/>
-                          <Button className="w-full" type="submit">Login</Button>
-                      </Card>
+                  {/* LOGIN FORM */}
+                  <TabsContent value="login" className="bg-[#676fgd]">
+                    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
+                      <h1 className="text-2xl font-bold mb-4 text-white">Login</h1>
+                      <Input className="bg-white" placeholder="Username"/>
+                      <Input className="bg-white" type="password" placeholder="Password"/>
+                      <Button className="w-full" type="submit">Login</Button>
+                    </Card>
                   </TabsContent>
-                  <TabsContent value="account">
-
+                  {/* REGISTER FORM */}
+                  <TabsContent value="register">
+                    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
+                      <h1 className="text-2xl font-bold mb-4 text-white">Register</h1>
+                      <Input className="bg-white" placeholder="Username"/>
+                      <Input className="bg-white" type="password" placeholder="Password"/>
+                      <Button className="w-full" type="submit">Register</Button>
+                    </Card>
                   </TabsContent>
                 </Tabs>
               </div>
-              <div className="basis-300" style={{ backgroundImage: `url('/side-bg.jpg')` }}></div>
             </div>
           </CardContent>
         </Card>
+        <div className="basis-150 bg-contain bg-[url('/side-bg.jpg')] bg-no-repeat"></div>
       </div>
     </div>
   );

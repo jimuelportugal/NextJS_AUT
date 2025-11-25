@@ -1,20 +1,126 @@
+'use client'
 import * as React from "react"
 import "tailwindcss";
 import { NavBar } from "@/components/NavBar"
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-// hover:scale-[1.02]
-// hover:shadow-indigo-500/30
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { saveToken } from "@/lib/auth";
+import { API_BASE } from "@/lib/config";
+
+function LoginForm() {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleLogin(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+
+    if (!API_BASE) {
+      setError('API endpoint is not configured.');
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.message || 'Login failed');
+      return;
+    }
+    saveToken(data.accessToken);
+    router.push('/dashboard')
+  }
+
+  return (
+    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
+      <h1 className="text-2xl font-bold mb-4 text-white">Login</h1>
+      <form onSubmit={handleLogin} className="space-y-4">
+        <Input
+          className="bg-white"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <Input
+          className="bg-white"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <Button className="w-full" type="submit">Login</Button>
+      </form>
+    </Card>
+  );
+}
+
+function RegisterForm() {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleRegister(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+
+    if (!API_BASE) {
+      setError('API endpoint is not configured.');
+      return;
+    }
+
+    const rest = await fetch(`${API_BASE}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const data = await rest.json();
+    if (!rest.ok) {
+      setError(data.message || 'Register Failed')
+      return;
+    }
+
+    router.push('/login')
+  }
+
+  return (
+    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
+      <h1 className="text-2xl font-bold mb-4 text-white">Register</h1>
+      <form onSubmit={handleRegister} className="space-y-4">
+        <Input
+          className="bg-white"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <Input
+          className="bg-white"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <Button className="w-full" type="submit">Register</Button>
+      </form>
+    </Card>
+  );
+}
+
 export default function Home() {
   return (
     <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
@@ -28,28 +134,16 @@ export default function Home() {
           <CardContent>
             <div>
               <div className="basis-50">
-                <Tabs defaultValue="account" className="w-[400px]">
+                <Tabs defaultValue="login" className="w-[400px]">
                   <TabsList className="bg-[#3d4254]">
                     <TabsTrigger className="bg-[#3d4254]" value="login">Login</TabsTrigger>
                     <TabsTrigger className="bg-[#3d4254]" value="register">Register</TabsTrigger>
                   </TabsList>
-                  {/* LOGIN FORM */}
                   <TabsContent value="login" className="bg-[#676fgd]">
-                    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
-                      <h1 className="text-2xl font-bold mb-4 text-white">Login</h1>
-                      <Input className="bg-white" placeholder="Username"/>
-                      <Input className="bg-white" type="password" placeholder="Password"/>
-                      <Button className="w-full" type="submit">Login</Button>
-                    </Card>
+                    <LoginForm />
                   </TabsContent>
-                  {/* REGISTER FORM */}
-                  <TabsContent value="register">
-                    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
-                      <h1 className="text-2xl font-bold mb-4 text-white">Register</h1>
-                      <Input className="bg-white" placeholder="Username"/>
-                      <Input className="bg-white" type="password" placeholder="Password"/>
-                      <Button className="w-full" type="submit">Register</Button>
-                    </Card>
+                  <TabsContent value="register" className="bg-[#676fgd]">
+                    <RegisterForm />
                   </TabsContent>
                 </Tabs>
               </div>

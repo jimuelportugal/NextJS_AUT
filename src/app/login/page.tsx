@@ -7,10 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { API_BASE } from "@/lib/config";
 import { FormEvent } from "react";
-import { error } from "console";
 
 export default function LoginPage() {
-
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -18,35 +16,35 @@ export default function LoginPage() {
 
     async function handleLogin(e: FormEvent) {
         e.preventDefault();
-        setError(' ')
+        setError('');
 
         const res = await fetch('${API_BASE}/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password },)
+            body: JSON.stringify({ username, password }),
         });
         const data = await res.json();
-        if (!res.ok)
-            setError(data.message || 'Login failed')
-        return;
+        if (!res.ok) {
+            setError(data.message || 'Login failed');
+            return;
+        }
+        saveToken(data.accessToken);
+        router.push('/dashboard')
     }
-    saveToken(data.accessToken);
-        router.push('/dashboard');
-}
 
-return (
-    <div className="flex itemsa-center justify-center h-screen">
-        <Card className="w-full max-w-sm p-6">
-            <cardContent>
-                <h1 className="text-xl font-bold md-4">LOGIN</h1>
+    return (
+        <div className=" flex items-center justify-center h-screen">
+            <Card className="w-full max-w-sm p-6">
+                <h1 className="text-xl font-bold mb-4">Login</h1>
                 <form onSubmit={handleLogin} className="space-y-4">
-                    <Input placeholder="Usernamr" value={username} onChange={(e) => setUsername(e.target.value)} />
-                    <Input type="passsword" placeholder="Passsword" value={password} onChange={(e) => setPassword(e.target.value)}/>
+                    <Input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
                     {error && <p className="text-red-500 text-sm">{error}</p>}
+                    <Button className="w-full" type="submit">Login</Button>
                 </form>
-                <Button variant="link" className="mt-2 w-full" onClick={() => router.push('/register')}>Create an Account</Button>
-            </cardContent>
-        </Card>
-    </div>
-);
+                <Button variant="link" className="mt-2 w-full" onClick={() => router.push('/register')}>Create an account</Button>
+            </Card>
+        </div>
+    )
+
 }

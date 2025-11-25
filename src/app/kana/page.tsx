@@ -8,41 +8,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState } from "react";
 import { KanaCharacter, kanaData } from "@/lib/kanaData";
 
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-}
+const fullKanaData = kanaData;
 
 function KanaStudyModule() {
-  const [currentKanaList, setCurrentKanaList] = useState(kanaData);
   const [currentType, setCurrentType] = useState<'hiragana' | 'katakana'>('hiragana');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
 
-  const currentCharacter = currentKanaList[currentIndex];
+  const currentCharacter = fullKanaData[currentIndex];
 
   const handleNext = () => {
     setShowAnswer(false);
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % currentKanaList.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % fullKanaData.length);
   };
 
   const handlePrev = () => {
     setShowAnswer(false);
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + currentKanaList.length) % currentKanaList.length);
-  };
-
-  const handleRandomize = () => {
-    setCurrentKanaList(shuffleArray(currentKanaList));
-    setCurrentIndex(0);
-    setShowAnswer(false);
-  };
-
-  const handleStartQuiz = () => {
-    alert("Quiz Mode started! (Feature under construction)");
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + fullKanaData.length) % fullKanaData.length);
   };
 
   return (
@@ -86,15 +68,9 @@ function KanaStudyModule() {
         <Button onClick={handleNext} className="text-white bg-[#E1AA4C] hover:bg-white">
           Next Character
         </Button>
-        <Button onClick={handleRandomize} variant="secondary" className="text-white bg-[#5c4269] hover:bg-[#725482]">
-          Randomize
-        </Button>
-        <Button onClick={handleStartQuiz} className="text-white bg-[#10b981] hover:bg-[#059669]">
-          Start Quiz
-        </Button>
       </div>
       <p className="text-white mt-4">
-        Character {currentIndex + 1} of {currentKanaList.length}
+        Character {currentIndex + 1} of {fullKanaData.length}
       </p>
     </div>
   );
@@ -132,6 +108,7 @@ function KanaCard({ character, type, showAnswer, setShowAnswer }: KanaCardProps)
     </Card>
   );
 }
+
 export default function KanaPage() {
   return (
     <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">

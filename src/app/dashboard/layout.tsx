@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: {
 
     function handleLogout() {
         logoutUser();
-        router.push('/login')
+        router.push('')
     }
     return (
         <div className="p-6">

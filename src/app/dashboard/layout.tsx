@@ -10,13 +10,13 @@ export default function DashboardLayout({ children }: {
     const token = getToken();
 
     if (!token) {
-        router.push('/');
+        router.push('https://nextjs-aut.onrender.com/');
         return null;
     }
 
     function handleLogout() {
         logoutUser();
-        router.push('')
+        router.push('https://nextjs-aut.onrender.com/')
     }
     return (
         <div className="p-6">

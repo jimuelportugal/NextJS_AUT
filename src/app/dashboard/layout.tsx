@@ -54,13 +54,7 @@ export default function DashboardHome() {
 
     // Hide the previous dashboard info and show the manga layout
     return (
-        <div className="space-y-6">
-            
-            {/* Header: Back arrow and Recommended title */}
-            <div className="flex items-center space-x-2 pb-4 border-b border-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left h-6 w-6 text-gray-400 cursor-pointer"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-            </div>
-            
+        <div className="space-y-6">   
             {/* Manga Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 pt-4">
                 {mockManga.map((manga, index) => (

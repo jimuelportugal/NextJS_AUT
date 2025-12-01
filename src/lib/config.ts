@@ -1,1 +1,1 @@
-export const API_BASE = 'https://online-database-postman.onrender.com/auth';
+export const API_BASE = 'https://adet-aiah.onrender.com/auth';

@@ -10,7 +10,7 @@ export default function DashboardLayout({ children }: {
     const token = getToken();
 
     if (!token) {
-        router.push('/login');
+        router.push('/');
         return null;
     }
 

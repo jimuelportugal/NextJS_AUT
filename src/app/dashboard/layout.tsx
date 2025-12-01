@@ -69,14 +69,12 @@ export default function DashboardHome() {
             {/* Header: Back arrow and Recommended title */}
             <div className="flex items-center space-x-2 pb-4 border-b border-gray-700">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left h-6 w-6 text-gray-400 cursor-pointer"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-                <h2 className="text-xl font-bold text-gray-200">Recommended</h2>
             </div>
             
             {/* Sort/Filter Bar */}
             <div className="flex justify-between items-center">
                 {/* Sort By Section */}
                 <div className="flex items-center space-x-2 text-gray-400 text-sm">
-                    <span className="font-semibold">Sort by</span>
                     <div className="flex items-center px-2 py-1 bg-[#202125] rounded-md cursor-pointer border border-gray-700 hover:border-red-500 transition-colors">
                         <span>None</span>
                         <ChevronDown className="h-4 w-4 ml-1" />

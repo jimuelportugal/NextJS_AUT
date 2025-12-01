@@ -16,7 +16,7 @@ interface jwtPayload {
 
 // Mock data to fill the grid, mimicking MangaDex covers
 const mockManga = [
-    { title: "IDOL x IDOL STORY!", cover: "https://via.placeholder.com/150x210/ff4d4d/ffffff?text=Manga+1" },
+    { title: "Berserk", cover: "https://mangadex.org/covers/801513ba-a712-498c-8f57-cae55b38cc92/81e1c82d-6672-400c-8c58-4ff9bfb89031.jpg" },
     { title: "Shitai Kanjou no Negima", cover: "https://via.placeholder.com/150x210/2d3250/ffffff?text=Manga+2" },
     { title: "Aku no Hadou o Ikikomashou", cover: "https://via.placeholder.com/150x210/424769/ffffff?text=Manga+3" },
     { title: "Ookami to Koushinryou: Spring Log", cover: "https://via.placeholder.com/150x210/ff4d4d/ffffff?text=Manga+4" },

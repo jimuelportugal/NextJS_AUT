@@ -1,1 +1,1 @@
-export const API_BASE = 'https://nextjs-aut.onrender.com/auth';
+export const API_BASE = 'https://online-database-postman.onrender.com/auth';

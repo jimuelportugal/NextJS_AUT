@@ -11,13 +11,13 @@ export default function DashboardLayout({ children }: {
     const token = getToken();
 
     if (!token) {
-        router.push('https://nextjs-aut.onrender.com/');
+        router.push('/'); 
         return null;
     }
 
     function handleLogout() {
         logoutUser();
-        router.push('https://nextjs-aut.onrender.com/')
+        router.push('/')
     }
     return (
         <div className="p-6">
@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: {
                 </div>
             </header>
             <header className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
+                <h1 className="text-2xl font-bold text-white">Books Dashboard</h1>
                 <Button variant="destructive" onClick={handleLogout}>Logout</Button>
             </header>
             {children}

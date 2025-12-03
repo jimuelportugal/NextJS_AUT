@@ -1,7 +1,7 @@
 'use client'
 import * as React from "react"
 import "tailwindcss";
-import { NavBar } from "@/components/NavBar"
+// Removed import { NavBar } from "@/components/NavBar"
 import {
   Card,
   CardContent,
@@ -29,7 +29,7 @@ function LoginForm() {
       return;
     }
 
-    const res = await fetch(`${API_BASE}/login`, {
+    const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -82,7 +82,7 @@ function RegisterForm() {
       return;
     }
 
-    const rest = await fetch(`${API_BASE}/register`, {
+    const rest = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -124,11 +124,7 @@ function RegisterForm() {
 export default function Home() {
   return (
     <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
-      {/* <header className="sticky top-0 z-50 w-full">
-        <div className="max-w-7xl px-4 sm:px-6 lg:px-8">
-          <NavBar />
-        </div>
-      </header> */}
+      {/* Removed <header> block containing NavBar */}
       <div className="pl-30 pt-35 max-w-5xl mx-auto text-center flex flex-row h-auto">
         <Card className="bg-[#424769] border-none rounded-l-lg rounded-r-none text-white shadow-2xl border border-gray-700 backdrop-blur-sm duration-300">
           <CardContent>

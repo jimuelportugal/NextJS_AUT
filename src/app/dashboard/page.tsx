@@ -16,7 +16,7 @@ interface jwtPayload {
 
 // Mock data to fill the grid, mimicking MangaDex covers
 const mockManga = [
-    { title: "Berserk", cover: "https://mangadex.org/covers/801513ba-a712-498c-8f57-cae55b38cc92/81e1c82d-6672-400c-8c58-4ff9bfb89031.jpg" },
+    { title: "Data Science at the Command Line", cover: "https://www.freetechbooks.com/uploads/1672562105-1646918798-cover-small.jpg" },
     { title: "", cover: "" }
 ];
 

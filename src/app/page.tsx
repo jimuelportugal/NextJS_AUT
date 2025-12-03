@@ -134,8 +134,8 @@ export default function Home() {
           <CardContent>
             <div>
               <div className="basis-50">
-                <Tabs defaultValue="login" className="w-[400px]">
-                  <TabsList className="bg-[#3d4254] items-center">
+                <Tabs defaultValue="login" className="w-[400px] content-center">
+                  <TabsList className="bg-[#3d4254]">
                     <TabsTrigger className="bg-[#3d4254]" value="login">Login</TabsTrigger>
                     <TabsTrigger className="bg-[#3d4254]" value="register">Register</TabsTrigger>
                   </TabsList>

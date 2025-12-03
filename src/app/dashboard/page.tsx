@@ -14,9 +14,12 @@ interface jwtPayload {
     iat: number;
 }
 
-// Mock data to fill the grid, mimicking MangaDex covers
 const mockManga = [
     { title: "Data Science at the Command Line", cover: "https://www.freetechbooks.com/uploads/1672562105-1646918798-cover-small.jpg" },
+    { title: "The Art of Unix Programming", cover: "https://www.freetechbooks.com/uploads/1460204861-cover-small.png" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
     { title: "", cover: "" }
 ];
 
@@ -53,8 +56,8 @@ export default function DashboardHome() {
     }
 
     return (
-        <div className="space-y-6">   
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 pt-4">
+        <div className="space-y-6 bg-[#2d3250]">   
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                 {mockManga.map((manga, index) => (
                     <MangaCard key={index} title={manga.title} cover={manga.cover} />
                 ))}

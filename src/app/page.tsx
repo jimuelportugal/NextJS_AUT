@@ -1,7 +1,6 @@
 'use client'
 import * as React from "react"
 import "tailwindcss";
-// Removed import { NavBar } from "@/components/NavBar"
 import {
   Card,
   CardContent,
@@ -14,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { saveToken } from "@/lib/auth";
 import { API_BASE } from "@/lib/config";
 
+// LoginForm remains largely the same, handling login and redirect to dashboard
 function LoginForm() {
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -67,15 +67,17 @@ function LoginForm() {
   );
 }
 
-function RegisterForm() {
-  const router = useRouter();
+// RegisterForm now accepts a function to change the active tab
+function RegisterForm({ setActiveTab }: { setActiveTab: (value: string) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   async function handleRegister(e: FormEvent) {
     e.preventDefault();
     setError('');
+    setMessage('');
 
     if (!API_BASE) {
       setError('API endpoint is not configured.');
@@ -94,7 +96,9 @@ function RegisterForm() {
       return;
     }
 
-    router.push('/login')
+    // FIX: Switch to the 'login' tab instead of using router.push()
+    setMessage('Registration successful! Please log in.');
+    setActiveTab('login'); 
   }
 
   return (
@@ -115,6 +119,7 @@ function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
+        {message && <p className="text-green-500 text-sm">{message}</p>}
         <Button className="w-70 cursor-pointer" type="submit">Register</Button>
       </form>
     </Card>
@@ -122,33 +127,40 @@ function RegisterForm() {
 }
 
 export default function Home() {
-  return (
-    <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
-      {/* Removed <header> block containing NavBar */}
-      <div className="pl-30 pt-35 max-w-5xl mx-auto text-center flex flex-row h-auto">
-        <Card className="bg-[#424769] border-none rounded-l-lg rounded-r-none text-white shadow-2xl border border-gray-700 backdrop-blur-sm duration-300">
-          <CardContent>
-            <div>
-              <div className="basis-50">
-                <Tabs defaultValue="login" className="w-[400px] items-center justify-center">
-                  <TabsList className="bg-[#3d4254]  text-2xl">
-                    <TabsTrigger className="bg-[#3d4254] text-base cursor-pointer" value="login">Login</TabsTrigger>
-                    <TabsTrigger className="bg-[#3d4254] text-base cursor-pointer" value="register">Register</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="login" className="bg-[#676fgd]">
-                    <LoginForm />
-                  </TabsContent>
-                  <TabsContent value="register" className="bg-[#676fgd]">
-                    <RegisterForm />
-                  </TabsContent>
-                </Tabs>
-              <p>TEXT</p>
-              </div>
+    // State to manage which tab is active
+    const [activeTab, setActiveTab] = useState('login');
+
+    return (
+        <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
+            <div className="pl-30 pt-35 max-w-5xl mx-auto text-center flex flex-row h-auto">
+                <Card className="bg-[#424769] border-none rounded-l-lg rounded-r-none text-white shadow-2xl border border-gray-700 backdrop-blur-sm duration-300">
+                    <CardContent>
+                        <div>
+                            <div className="basis-50">
+                                <Tabs 
+                                    value={activeTab} // Control the active tab
+                                    onValueChange={setActiveTab} // Update state when a tab is clicked
+                                    className="w-[400px] items-center justify-center"
+                                >
+                                    <TabsList className="bg-[#3d4254]  text-2xl">
+                                        <TabsTrigger className="bg-[#3d4254] text-base cursor-pointer" value="login">Login</TabsTrigger>
+                                        <TabsTrigger className="bg-[#3d4254] text-base cursor-pointer" value="register">Register</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="login" className="bg-[#676fgd]">
+                                        <LoginForm />
+                                    </TabsContent>
+                                    <TabsContent value="register" className="bg-[#676fgd]">
+                                        {/* Pass the setter to allow registration to flip the tab */}
+                                        <RegisterForm setActiveTab={setActiveTab} />
+                                    </TabsContent>
+                                </Tabs>
+                                <p>TEXT</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <div className="basis-150 bg-contain bg-[url('https://i.pinimg.com/736x/a6/ff/eb/a6ffeb43401e6b9c6614dde5f563b707.jpg')] bg-no-repeat"></div>
             </div>
-          </CardContent>
-        </Card>
-        <div className="basis-150 bg-contain bg-[url('https://i.pinimg.com/736x/a6/ff/eb/a6ffeb43401e6b9c6614dde5f563b707.jpg')] bg-no-repeat"></div>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }

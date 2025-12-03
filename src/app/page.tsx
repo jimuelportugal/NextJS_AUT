@@ -135,7 +135,7 @@ export default function Home() {
             <div>
               <div className="basis-50">
                 <Tabs defaultValue="login" className="w-[400px]">
-                  <TabsList className="bg-[#3d4254] content-center">
+                  <TabsList className="bg-[#3d4254] items-center">
                     <TabsTrigger className="bg-[#3d4254]" value="login">Login</TabsTrigger>
                     <TabsTrigger className="bg-[#3d4254]" value="register">Register</TabsTrigger>
                   </TabsList>

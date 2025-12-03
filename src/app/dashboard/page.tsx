@@ -20,13 +20,33 @@ const mockManga = [
     { title: "", cover: "" },
     { title: "", cover: "" },
     { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
+    { title: "", cover: "" },
     { title: "", cover: "" }
 ];
 
 function MangaCard({ title, cover }: { title: string, cover: string }) {
     return (
-        <Card className="rounded-md border-none overflow-hidden bg-[#2d3250] hover:bg-[#3d4254] transition-colors cursor-pointer w-full shadow-none">
-            <CardContent className="p-0">
+        <Card className="rounded-md border-none overflow-hidden bg-[#2d3250] transition-colors cursor-pointer w-full shadow-none">
+            <CardContent className="p-5">
                 <div className="w-full h-auto aspect-[150/210]">
                     <img src={cover} alt={title} className="w-full h-full object-cover" />
                 </div>

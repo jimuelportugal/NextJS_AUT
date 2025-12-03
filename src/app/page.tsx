@@ -44,7 +44,7 @@ function LoginForm() {
   }
 
   return (
-    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
+    <Card className="w-full p-6 bg-[#676fgd] border-none mt-20 mb-30 color-white">
       <h1 className="text-2xl font-bold mb-4 text-white">Login</h1>
       <form onSubmit={handleLogin} className="space-y-4">
         <Input
@@ -61,7 +61,7 @@ function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <Button className="w-full" type="submit">Login</Button>
+        <Button className="w-70 cursor-pointer" type="submit">Login</Button>
       </form>
     </Card>
   );
@@ -98,7 +98,7 @@ function RegisterForm() {
   }
 
   return (
-    <Card className="w-full p-6 bg-[#676fgd] border-none mt-30 mb-30 color-white">
+    <Card className="w-full p-6 bg-[#676fgd] border-none mt-20 mb-30 color-white">
       <h1 className="text-2xl font-bold mb-4 text-white">Register</h1>
       <form onSubmit={handleRegister} className="space-y-4">
         <Input
@@ -115,7 +115,7 @@ function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <Button className="w-full" type="submit">Register</Button>
+        <Button className="w-70 cursor-pointer" type="submit">Register</Button>
       </form>
     </Card>
   );
@@ -134,10 +134,10 @@ export default function Home() {
           <CardContent>
             <div>
               <div className="basis-50">
-                <Tabs defaultValue="login" className="w-[400px] content-center">
-                  <TabsList className="bg-[#3d4254]">
-                    <TabsTrigger className="bg-[#3d4254]" value="login">Login</TabsTrigger>
-                    <TabsTrigger className="bg-[#3d4254]" value="register">Register</TabsTrigger>
+                <Tabs defaultValue="login" className="w-[400px] items-center justify-center">
+                  <TabsList className="bg-[#3d4254]  text-2xl">
+                    <TabsTrigger className="bg-[#3d4254] text-base cursor-pointer" value="login">Login</TabsTrigger>
+                    <TabsTrigger className="bg-[#3d4254] text-base cursor-pointer" value="register">Register</TabsTrigger>
                   </TabsList>
                   <TabsContent value="login" className="bg-[#676fgd]">
                     <LoginForm />
@@ -146,11 +146,12 @@ export default function Home() {
                     <RegisterForm />
                   </TabsContent>
                 </Tabs>
+              <p>TEXT</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <div className="basis-150 bg-contain bg-[url('/side-bg.jpg')] bg-no-repeat"></div>
+        <div className="basis-150 bg-contain bg-[url('https://i.pinimg.com/736x/a6/ff/eb/a6ffeb43401e6b9c6614dde5f563b707.jpg')] bg-no-repeat"></div>
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }: {
         router.push('/')
     }
     return (
-        <div className="min-h-screen bg-[#2d3250] p-6"> 
+        <div className="min-h-screen bg-[#2d3250]"> 
             <header className="sticky top-0 z-50 w-full">
                 <div className="max-w-7xl px-4 sm:px-6 lg:px-8">
                     <NavBar />

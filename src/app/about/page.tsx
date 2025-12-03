@@ -26,7 +26,7 @@ export default function About() {
             Our Purpose
           </h2>
           <p className="text-lg text-gray-200 leading-relaxed mb-6">
-            Welcome to our **Library Management System**. This platform is designed to provide a modern, efficient way for users to interact with our book catalog. Our primary goal is to simplify the process of borrowing and requesting books, making the library experience as smooth as possible.
+            Welcome to our  Library Management System. This platform is designed to provide a modern, efficient way for users to interact with our book catalog. Our primary goal is to simplify the process of borrowing and requesting books, making the library experience as smooth as possible.
           </p>
 
           <h3 className="text-2xl font-medium text-white mb-4">
@@ -34,22 +34,23 @@ export default function About() {
           </h3>
           <ul className="space-y-3 text-lg text-gray-300 list-disc list-inside">
             <li>
-              **Book Catalog**: Easily browse and search through our comprehensive collection of books.
+              Book Catalog: Easily browse and search through our comprehensive collection of books.
             </li>
             <li>
-              **Request & Borrow**: Users can directly submit requests to borrow available books, streamlining the checkout process.
+              Request & Borrow: Users can directly submit requests to borrow available books, streamlining the checkout process.
             </li>
             <li>
-              **Status Tracking**: Books are clearly marked with their status, indicating whether they are **`available`** or **`borrowed`**, so you always know what's ready to read.
+              Status Tracking: Books are clearly marked with their status, indicating whether they are `available` or `borrowed`, so you always know what's ready to read.
             </li>
             <li>
-              **User Management**: The system securely manages user accounts, roles (like administrators/staff through the `positions` table), and borrowing history.
+              User Management: The system securely manages user accounts, roles (like administrators/staff through the `positions` table), and borrowing history.
             </li>
           </ul>
-
-          <p className="mt-8 text-lg text-gray-200 italic">
-            "Connecting readers with the books they love, effortlessly."
-          </p>
+          <div className="mt-8 pt-4 border-t border-gray-600">
+            <p className="text-lg font-semibold text-yellow-300">
+              For any questions or concerns regarding the system, please visit our dedicated <a href="/contact" className="underline text-yellow-200 hover:text-white transition duration-150">Contact Page</a>.
+            </p>
+          </div>
         </div>
       </div>
     </div>

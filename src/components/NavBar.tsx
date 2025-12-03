@@ -40,7 +40,8 @@ export function NavBar() {
   return (
     <NavigationMenu className="w-full">
       <NavigationMenuList className="flex-wrap justify-start p-0 -ml-4 mt-1">
-        <NavLink href="/" >Home</NavLink>
+        <NavLink href="/profile" >Profile</NavLink>
+        <NavLink href="/dashboard" >Home</NavLink>
         <NavLink href="/about" >About</NavLink>
         <NavLink href="/contact" prefetch={false} >Contact</NavLink> 
       </NavigationMenuList>

@@ -22,18 +22,18 @@ interface Book {
     status: 'available' | 'borrowed';
 }
 
-function BookCard({ 
-    book_id, 
-    title, 
-    cover, 
-    status, 
-    onBorrow 
-}: { 
-    book_id: number, 
-    title: string, 
-    cover: string, 
-    status: 'available' | 'borrowed', 
-    onBorrow: (bookId: number) => void 
+function BookCard({
+    book_id,
+    title,
+    cover,
+    status,
+    onBorrow
+}: {
+    book_id: number,
+    title: string,
+    cover: string,
+    status: 'available' | 'borrowed',
+    onBorrow: (bookId: number) => void
 }) {
     const statusColor = status === 'available' ? 'text-green-400' : 'text-yellow-400';
 
@@ -44,7 +44,7 @@ function BookCard({
                     {cover ? (
                         <img src={cover} alt={title} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-600 text-gray-400 text-center text-sm">No Cover</div>
+                        <div className="w-full h-210 flex items-center justify-center bg-gray-600 text-gray-400 text-center text-sm">No Cover</div>
                     )}
                 </div>
                 <div className="pt-1 pb-2 px-1 text-sm leading-tight space-y-1">
@@ -55,7 +55,7 @@ function BookCard({
                     {status === 'available' && (
                         <Button
                             size="sm"
-                            className="w-full mt-2 bg-primary hover:bg-primary/80"
+                            className="w-full mt-1 bg-primary hover:bg-primary/80"
                             onClick={() => onBorrow(book_id)}
                         >
                             Borrow
@@ -106,7 +106,6 @@ export default function DashboardHome() {
             }
 
             const data: Book[] = await res.json();
-            // Sort to show available books first
             const sortedBooks = data.sort((a, b) => {
                 if (a.status === 'available' && b.status === 'borrowed') return -1;
                 if (a.status === 'borrowed' && b.status === 'available') return 1;
@@ -125,16 +124,14 @@ export default function DashboardHome() {
             alert("You must be logged in to borrow a book.");
             return;
         }
-        
+
         try {
-            // Note: This endpoint is assumed to be implemented on the backend.
             const res = await fetch(`${API_BASE}/books/borrow/${bookId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                // The backend should use the userId from the token to set the borrower_id.
             });
 
             if (!res.ok) {
@@ -143,7 +140,6 @@ export default function DashboardHome() {
             }
 
             alert(`Book ID ${bookId} successfully borrowed!`);
-            // Refresh the book list to update the status
             await fetchAllBooks();
 
         } catch (err: any) {
@@ -164,17 +160,17 @@ export default function DashboardHome() {
     }
 
     return (
-        <div className="space-y-6 bg-[#2d3250]">   
+        <div className="space-y-6">   
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                 {books.length === 0 ? (
                     <p className="text-white col-span-full">No books found in the library.</p>
                 ) : (
                     books.map((book) => (
-                        <BookCard 
-                            key={book.book_id} 
+                        <BookCard
+                            key={book.book_id}
                             book_id={book.book_id}
-                            title={book.title} 
-                            cover={book.image_link} 
+                            title={book.title}
+                            cover={book.image_link}
                             status={book.status}
                             onBorrow={handleBorrow}
                         />

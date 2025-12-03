@@ -26,7 +26,7 @@ export default function DashboardLayout({ children }: {
                     <NavBar />
                 </div>
             </header>
-            <header className="flex justify-between items-center mb-6">
+            <header className="flex justify-between items-center pt-10 mb-6">
                 <h1 className="text-2xl font-bold text-white">Books Dashboard</h1>
                 <Button variant="destructive" onClick={handleLogout}>Logout</Button>
             </header>

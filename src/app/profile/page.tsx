@@ -1,4 +1,5 @@
-import * as React from "react";
+
+'use client';import * as React from "react";
 import { useState, useEffect } from "react";
 import { getToken, logoutUser } from "@/lib/auth";
 import type { CustomJwtPayload } from "@/lib/auth"; // FIX: Added import type

@@ -1,6 +1,12 @@
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode, JwtPayload } from "jwt-decode";
 
 export const TOKEN_KEY = "accessToken";
+
+interface CustomJwtPayload extends JwtPayload {
+    sub: number;
+    username: string;
+    role: 'admin' | 'user';
+}
 
 function saveToken(token) {
     if (typeof window !== 'undefined') {
@@ -30,4 +36,4 @@ function isAdmin() {
     }
 }
 
-export { saveToken, getToken, logoutUser, isAdmin }
+export { saveToken, getToken, logoutUser, isAdmin, CustomJwtPayload }

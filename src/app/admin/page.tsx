@@ -3,78 +3,172 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { isAdmin, logoutUser, getToken } from "@/lib/auth";
-import type { CustomJwtPayload } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { API_BASE } from "@/lib/config";
-import { jwtDecode } from "jwt-decode";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const API_BASE_ROOT: string = API_BASE.replace('/auth', '');
 
 interface User { id: number, username: string, role: string }
-interface Book { book_id: number, title: string, status: 'available' | 'requested' | 'borrowed', borrower_id: number | null }
+interface Book { book_id: number, title: string, image_link: string, status: 'available' | 'requested' | 'borrowed', borrower_id: number | null }
 
 function AdminUserList() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    
+    // Form States
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [currentUser, setCurrentUser] = useState<Partial<User>>({});
+    const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user' });
 
     const fetchUsers = async (): Promise<void> => {
         const token: string | null = getToken();
-        if (!token) {
-            setLoading(false);
-            return;
-        }
-
+        if (!token) return;
         try {
             const res = await fetch(`${API_BASE_ROOT}/users`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || "Failed to fetch users");
-            }
-
-            const data: User[] = await res.json();
-            setUsers(data);
-        } catch (err: any) {
-            setError((err as Error).message || "An unexpected error occurred.");
-        } finally {
-            setLoading(false);
-        }
+            if (res.ok) setUsers(await res.json());
+        } catch (err) { console.error(err); } 
+        finally { setLoading(false); }
     }
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+    useEffect(() => { fetchUsers(); }, []);
 
-    const handleAction = async (userId: number, action: 'delete' | 'edit'): Promise<void> => {
-        if (action === 'delete') {
-            if (!confirm(`Are you sure you want to delete User ID ${userId}?`)) return;
-        }
-        
-        console.log(`Admin action: ${action} user ${userId}. (Simulated)`);
+    const handleAddUser = async () => {
+        const token = getToken();
+        await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(newUser),
+        });
+        setIsAddOpen(false);
+        setNewUser({ username: '', password: '', role: 'user' });
         fetchUsers();
-    }
+    };
 
+    const handleEditUser = async () => {
+        if(!currentUser.id) return;
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/users/${currentUser.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ role: currentUser.role }),
+        });
+        setIsEditOpen(false);
+        fetchUsers();
+    };
+
+    const handleDeleteUser = async (id: number) => {
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/users/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
+        fetchUsers();
+    };
 
     if (loading) return <p className="text-white">Loading users...</p>;
-    if (error) return <p className="text-red-400">Error: {error}</p>;
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white">Manage Users ({users.length})</h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">Manage Users ({users.length})</h2>
+                {/* ADD USER DIALOG */}
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                    <DialogTrigger asChild>
+                        <Button>Add New User</Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#424769] text-white border-gray-600">
+                        <DialogHeader>
+                            <DialogTitle>Add New User</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <Input placeholder="Username" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+                            <Input placeholder="Password" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+                            <select 
+                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-white"
+                                value={newUser.role} 
+                                onChange={e => setNewUser({...newUser, role: e.target.value})}
+                            >
+                                <option value="user" className="text-black">User</option>
+                                <option value="admin" className="text-black">Admin</option>
+                            </select>
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={handleAddUser}>Save</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            {/* EDIT USER DIALOG */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="bg-[#424769] text-white border-gray-600">
+                    <DialogHeader><DialogTitle>Edit User Role</DialogTitle></DialogHeader>
+                    <div className="py-4">
+                        <p className="mb-2">Username: {currentUser.username}</p>
+                        <select 
+                            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-white"
+                            value={currentUser.role} 
+                            onChange={e => setCurrentUser({...currentUser, role: e.target.value})}
+                        >
+                            <option value="user" className="text-black">User</option>
+                            <option value="admin" className="text-black">Admin</option>
+                        </select>
+                    </div>
+                    <DialogFooter><Button onClick={handleEditUser}>Update</Button></DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="bg-[#424769] p-4 rounded-lg">
-                <Button className="mb-4">Add New User</Button>
                 <ul className="text-gray-200 space-y-2">
                     {users.map(user => (
                         <li key={user.id} className="flex justify-between items-center p-2 border-b border-[#2d3250]">
-                            <span>{user.username} - ({user.role})</span>
-                            <div>
-                                <Button size="sm" variant="outline" className="mr-2" onClick={() => handleAction(user.id, 'edit')}>Edit</Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleAction(user.id, 'delete')}>Delete</Button>
+                            <span>{user.username} <span className="text-xs bg-gray-700 px-2 py-1 rounded ml-2">{user.role}</span></span>
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="outline" onClick={() => { setCurrentUser(user); setIsEditOpen(true); }}>Edit</Button>
+                                
+                                {/* DELETE CONFIRMATION */}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="destructive">Delete</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-[#424769] text-white border-gray-600">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-gray-300">
+                                                This action cannot be undone. This will permanently delete the user <b>{user.username}</b>.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="bg-gray-600 text-white border-none hover:bg-gray-700">Cancel</AlertDialogCancel>
+                                            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => handleDeleteUser(user.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </li>
                     ))}
@@ -87,118 +181,176 @@ function AdminUserList() {
 function AdminBookList() {
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    
-    const fetchAllBooks = async (): Promise<void> => {
-        const token: string | null = getToken();
-        if (!token) return;
 
+    // Form States
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [currentBook, setCurrentBook] = useState<Partial<Book>>({});
+    const [newBook, setNewBook] = useState({ title: '', image_link: '' });
+
+    const fetchAllBooks = async (): Promise<void> => {
+        const token = getToken();
+        if (!token) return;
         try {
             const res = await fetch(`${API_BASE_ROOT}/books`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || "Failed to fetch books");
-            }
-            const data: Book[] = await res.json();
-            setBooks(data);
-        } catch (err: any) {
-            setError((err as Error).message || "An unexpected error occurred.");
-        } finally {
-            setLoading(false);
+            if (res.ok) setBooks(await res.json());
+        } catch (err) { console.error(err); } 
+        finally { setLoading(false); }
+    };
+
+    useEffect(() => { fetchAllBooks(); }, []);
+
+    const handleAddBook = async () => {
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/books`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(newBook),
+        });
+        setIsAddOpen(false);
+        setNewBook({ title: '', image_link: '' });
+        fetchAllBooks();
+    };
+
+    const handleEditBook = async () => {
+        if(!currentBook.book_id) return;
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/books/${currentBook.book_id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ title: currentBook.title, image_link: currentBook.image_link }),
+        });
+        setIsEditOpen(false);
+        fetchAllBooks();
+    };
+
+    const handleDeleteBook = async (id: number) => {
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/books/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
+        fetchAllBooks();
+    };
+
+    const handleApprove = async (id: number) => {
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/books/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ status: 'borrowed' }),
+        });
+        fetchAllBooks();
+    };
+
+    const handleReject = async (id: number) => {
+        const reason = prompt("Enter rejection reason:");
+        if(!reason) return;
+        const token = getToken();
+        await fetch(`${API_BASE_ROOT}/books/reject/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ reason }),
+        });
+        fetchAllBooks();
+    };
+
+    // NEW: Handle Return
+    const handleReturn = async (id: number) => {
+        const token = getToken();
+        const res = await fetch(`${API_BASE_ROOT}/books/return/${id}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if(res.ok) {
+            alert("Book marked as returned.");
+            fetchAllBooks();
+        } else {
+            const data = await res.json();
+            alert(`Error: ${data.message}`);
         }
     };
-    
-    const handleAction = async (bookId: number, action: 'delete' | 'edit'): Promise<void> => {
-        if (action === 'delete') {
-            if (!confirm(`Are you sure you want to delete Book ID ${bookId}?`)) return;
-        }
-        
-        console.log(`Admin action: ${action} book ${bookId}. (Simulated)`);
-        fetchAllBooks();
-    }
-    
-    const handleReject = async (bookId: number): Promise<void> => {
-        const reason: string | null = prompt("Enter reason for rejecting the request:");
-        if (reason === null) return; 
-
-        const token: string | null = getToken();
-        try {
-            const res = await fetch(`${API_BASE_ROOT}/books/reject/${bookId}`, {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ reason }),
-            });
-            
-            if (!res.ok) {
-                const data = await res.json();
-                console.error("Rejection failed:", data.message);
-                throw new Error(data.message || "Failed to reject request.");
-            }
-
-            console.log(`Rejection successful for Book ID ${bookId}. Notification sent to user.`);
-            fetchAllBooks();
-
-        } catch (err: any) {
-            console.error(`Error rejecting request:`, (err as Error).message);
-        }
-    }
-    
-    const handleApprove = async (bookId: number): Promise<void> => {
-        const token: string | null = getToken();
-        try {
-            const res = await fetch(`${API_BASE_ROOT}/books/${bookId}`, {
-                method: 'PUT',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: 'borrowed' }),
-            });
-            
-            if (!res.ok) {
-                const data = await res.json();
-                console.error("Approval failed:", data.message);
-                throw new Error(data.message || "Failed to approve request.");
-            }
-
-            console.log(`Approval successful for Book ID ${bookId}. Status changed to 'borrowed'.`);
-            fetchAllBooks();
-
-        } catch (err: any) {
-            console.error(`Error approving request:`, (err as Error).message);
-        }
-    }
-
-    useEffect(() => {
-        fetchAllBooks();
-    }, []);
 
     if (loading) return <p className="text-white">Loading books...</p>;
-    if (error) return <p className="text-red-400">Error: {error}</p>;
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-bold text-white">Manage Books ({books.length})</h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">Manage Books ({books.length})</h2>
+                {/* ADD BOOK DIALOG */}
+                <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                    <DialogTrigger asChild>
+                        <Button>Add New Book</Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#424769] text-white border-gray-600">
+                        <DialogHeader><DialogTitle>Add New Book</DialogTitle></DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <Input placeholder="Book Title" value={newBook.title} onChange={e => setNewBook({...newBook, title: e.target.value})} />
+                            <Input placeholder="Cover Image URL" value={newBook.image_link} onChange={e => setNewBook({...newBook, image_link: e.target.value})} />
+                        </div>
+                        <DialogFooter><Button onClick={handleAddBook}>Save</Button></DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            {/* EDIT BOOK DIALOG */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="bg-[#424769] text-white border-gray-600">
+                    <DialogHeader><DialogTitle>Edit Book</DialogTitle></DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <Input placeholder="Book Title" value={currentBook.title || ''} onChange={e => setCurrentBook({...currentBook, title: e.target.value})} />
+                        <Input placeholder="Cover Image URL" value={currentBook.image_link || ''} onChange={e => setCurrentBook({...currentBook, image_link: e.target.value})} />
+                    </div>
+                    <DialogFooter><Button onClick={handleEditBook}>Update</Button></DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="bg-[#424769] p-4 rounded-lg">
-                <Button className="mb-4">Add New Book</Button>
                 <ul className="text-gray-200 space-y-2">
                     {books.map(book => (
-                        <li key={book.book_id} className="flex justify-between items-center p-2 border-b border-[#2d3250]">
-                            <span className="flex-1">{book.title} - Status: {book.status} (Borrower: {book.borrower_id || 'N/A'})</span>
-                            <div>
+                        <li key={book.book_id} className="flex flex-col md:flex-row justify-between items-center p-2 border-b border-[#2d3250] gap-4">
+                            <div className="flex items-center gap-4 flex-1">
+                                <img src={book.image_link || "https://placehold.co/40x60"} className="w-10 h-14 object-cover rounded" alt="cover"/>
+                                <div>
+                                    <p className="font-semibold">{book.title}</p>
+                                    <p className="text-xs text-gray-400">
+                                        Status: <span className={book.status === 'available' ? 'text-green-400' : 'text-yellow-400'}>{book.status}</span>
+                                        {book.borrower_id && ` (Borrower ID: ${book.borrower_id})`}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
                                 {book.status === 'requested' && (
                                     <>
-                                        <Button size="sm" className="mr-2 bg-green-500 hover:bg-green-600" onClick={() => handleApprove(book.book_id)}>Approve</Button>
-                                        <Button size="sm" variant="destructive" className="mr-4" onClick={() => handleReject(book.book_id)}>Reject</Button>
+                                        <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApprove(book.book_id)}>Approve</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleReject(book.book_id)}>Reject</Button>
                                     </>
                                 )}
-                                <Button size="sm" variant="outline" className="mr-2" onClick={() => handleAction(book.book_id, 'edit')}>Edit</Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleAction(book.book_id, 'delete')}>Delete</Button>
+                                {book.status === 'borrowed' && (
+                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => handleReturn(book.book_id)}>Returned</Button>
+                                )}
+                                <Button size="sm" variant="outline" onClick={() => { setCurrentBook(book); setIsEditOpen(true); }}>Edit</Button>
+                                
+                                {/* DELETE BOOK ALERT */}
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="destructive">Delete</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-[#424769] text-white border-gray-600">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Book?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-gray-300">
+                                                This action cannot be undone. This will permanently delete <b>{book.title}</b>.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="bg-gray-600 text-white border-none hover:bg-gray-700">Cancel</AlertDialogCancel>
+                                            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => handleDeleteBook(book.book_id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </li>
                     ))}
@@ -207,7 +359,6 @@ function AdminBookList() {
         </div>
     );
 }
-
 
 export default function AdminPage() {
     const router = useRouter();

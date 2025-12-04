@@ -31,7 +31,15 @@ import {
 const API_BASE_ROOT: string = API_BASE.replace('/auth', '');
 
 interface User { id: number, username: string, role: string }
-interface Book { book_id: number, title: string, image_link: string, status: 'available' | 'requested' | 'borrowed', borrower_id: number | null }
+// UPDATED: Added borrower_username to interface
+interface Book { 
+    book_id: number; 
+    title: string; 
+    image_link: string; 
+    status: 'available' | 'requested' | 'borrowed'; 
+    borrower_id: number | null; 
+    borrower_username?: string; 
+}
 
 function AdminUserList() {
     const [users, setUsers] = useState<User[]>([]);
@@ -39,7 +47,13 @@ function AdminUserList() {
     
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [currentUser, setCurrentUser] = useState<Partial<User>>({});
+    
+    // State for Editing
+    const [editId, setEditId] = useState<number | null>(null);
+    const [editUsername, setEditUsername] = useState('');
+    const [editPassword, setEditPassword] = useState(''); // Empty means don't change
+    const [editRole, setEditRole] = useState('user');
+
     const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user' });
 
     const fetchUsers = async (): Promise<void> => {
@@ -68,13 +82,27 @@ function AdminUserList() {
         fetchUsers();
     };
 
+    const openEditDialog = (user: User) => {
+        setEditId(user.id);
+        setEditUsername(user.username);
+        setEditRole(user.role);
+        setEditPassword(''); // Reset password field
+        setIsEditOpen(true);
+    };
+
     const handleEditUser = async () => {
-        if(!currentUser.id) return;
+        if(!editId) return;
         const token = getToken();
-        await fetch(`${API_BASE_ROOT}/users/${currentUser.id}`, {
+        
+        const payload: any = { username: editUsername, role: editRole };
+        if (editPassword) {
+            payload.password = editPassword;
+        }
+
+        await fetch(`${API_BASE_ROOT}/users/${editId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ role: currentUser.role }),
+            body: JSON.stringify(payload),
         });
         setIsEditOpen(false);
         fetchUsers();
@@ -122,21 +150,41 @@ function AdminUserList() {
                 </Dialog>
             </div>
 
+            {/* FULL EDIT USER DIALOG */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="bg-[#424769] text-white border-gray-600">
-                    <DialogHeader><DialogTitle>Edit User Role</DialogTitle></DialogHeader>
-                    <div className="py-4">
-                        <p className="mb-2">Username: {currentUser.username}</p>
-                        <select 
-                            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-white"
-                            value={currentUser.role} 
-                            onChange={e => setCurrentUser({...currentUser, role: e.target.value})}
-                        >
-                            <option value="user" className="text-black">User</option>
-                            <option value="admin" className="text-black">Admin</option>
-                        </select>
+                    <DialogHeader><DialogTitle>Edit User Details</DialogTitle></DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Username</label>
+                            <Input 
+                                value={editUsername} 
+                                onChange={e => setEditUsername(e.target.value)} 
+                                placeholder="Username"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Password (Leave blank to keep current)</label>
+                            <Input 
+                                type="password" 
+                                value={editPassword} 
+                                onChange={e => setEditPassword(e.target.value)} 
+                                placeholder="New Password"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Role</label>
+                            <select 
+                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm text-white"
+                                value={editRole} 
+                                onChange={e => setEditRole(e.target.value)}
+                            >
+                                <option value="user" className="text-black">User</option>
+                                <option value="admin" className="text-black">Admin</option>
+                            </select>
+                        </div>
                     </div>
-                    <DialogFooter><Button onClick={handleEditUser}>Update</Button></DialogFooter>
+                    <DialogFooter><Button onClick={handleEditUser}>Update User</Button></DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -146,7 +194,7 @@ function AdminUserList() {
                         <li key={user.id} className="flex justify-between items-center p-2 border-b border-[#2d3250]">
                             <span>{user.username} <span className="text-xs bg-gray-700 px-2 py-1 rounded ml-2">{user.role}</span></span>
                             <div className="flex gap-2">
-                                <Button size="sm" variant="outline" className="text-black" onClick={() => { setCurrentUser(user); setIsEditOpen(true); }}>Edit</Button>
+                                <Button size="sm" variant="outline" className="text-black" onClick={() => openEditDialog(user)}>Edit</Button>
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button size="sm" variant="destructive">Delete</Button>
@@ -280,6 +328,7 @@ function AdminBookList() {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">Manage Books ({books.length})</h2>
+                {/* ADD BOOK DIALOG */}
                 <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                     <DialogTrigger asChild>
                         <Button>Add New Book</Button>
@@ -295,6 +344,7 @@ function AdminBookList() {
                 </Dialog>
             </div>
 
+            {/* EDIT BOOK DIALOG */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="bg-[#424769] text-white border-gray-600">
                     <DialogHeader><DialogTitle>Edit Book</DialogTitle></DialogHeader>
@@ -306,7 +356,7 @@ function AdminBookList() {
                 </DialogContent>
             </Dialog>
 
-            {/* REJECT DIALOG: CONFIRMATION ONLY - NO INPUT */}
+            {/* REJECT BOOK ALERT DIALOG (NO INPUT) */}
             <AlertDialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
                 <AlertDialogContent className="bg-[#424769] text-white border-gray-600">
                     <AlertDialogHeader>
@@ -337,7 +387,12 @@ function AdminBookList() {
                                     <p className="font-semibold">{book.title}</p>
                                     <p className="text-xs text-gray-400">
                                         Status: <span className={book.status === 'available' ? 'text-green-400' : 'text-yellow-400'}>{book.status}</span>
-                                        {book.borrower_id && ` (Borrower ID: ${book.borrower_id})`}
+                                        {/* DISPLAY USERNAME HERE */}
+                                        {book.borrower_username && (
+                                            <span className="text-white ml-1">
+                                                — {book.status === 'requested' ? 'Requested by' : 'Borrowed by'}: <b>{book.borrower_username}</b>
+                                            </span>
+                                        )}
                                     </p>
                                 </div>
                             </div>

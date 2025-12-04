@@ -1,8 +1,7 @@
-
-'use client';import * as React from "react";
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { getToken, logoutUser } from "@/lib/auth";
-import type { CustomJwtPayload } from "@/lib/auth"; // FIX: Added import type
+import type { CustomJwtPayload } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { API_BASE } from "@/lib/config";
 import { useRouter } from "next/navigation";
@@ -194,14 +193,16 @@ export default function ProfilePage() {
         return <div className="min-h-screen bg-[#2d3250] text-red-400 p-6">Error: {error}</div>;
     }
     
+    // Fixed Layout Padding
     return (
-        <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black p-6">
+        <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
             <header className="sticky top-0 z-50 w-full">
                 <div className="max-w-7xl px-4 sm:px-6 lg:px-8">
                     <NavBar />
                 </div>
             </header>
-            <div className="max-w-7xl mx-auto space-y-8 text-white">
+            {/* Added padding here to replace the removed wrapper padding */}
+            <div className="max-w-7xl mx-auto space-y-8 text-white pt-10 p-6">
                 <header className="flex justify-between items-center pb-4 border-b border-gray-600">
                     <h1 className="text-3xl font-bold">Welcome, {username}</h1>
                     <Button variant="destructive" onClick={handleLogout}>Logout</Button>

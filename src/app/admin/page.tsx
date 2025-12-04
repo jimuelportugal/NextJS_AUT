@@ -149,9 +149,10 @@ function AdminUserList() {
                         <li key={user.id} className="flex justify-between items-center p-2 border-b border-[#2d3250]">
                             <span>{user.username} <span className="text-xs bg-gray-700 px-2 py-1 rounded ml-2">{user.role}</span></span>
                             <div className="flex gap-2">
-                                <Button size="sm" variant="outline" onClick={() => { setCurrentUser(user); setIsEditOpen(true); }}>Edit</Button>
+                                {/* Fixed Button Color: Added text-black */}
+                                <Button size="sm" variant="outline" className="text-black" onClick={() => { setCurrentUser(user); setIsEditOpen(true); }}>Edit</Button>
                                 
-                                {/* DELETE CONFIRMATION */}
+                                {/* DELETE CONFIRMATION - Using Alert Dialog */}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button size="sm" variant="destructive">Delete</Button>
@@ -246,6 +247,7 @@ function AdminBookList() {
     };
 
     const handleReject = async (id: number) => {
+        // We still use prompt here for simplicity of input, but removed alert()
         const reason = prompt("Enter rejection reason:");
         if(!reason) return;
         const token = getToken();
@@ -257,7 +259,7 @@ function AdminBookList() {
         fetchAllBooks();
     };
 
-    // NEW: Handle Return
+    // Removed the alert() call here
     const handleReturn = async (id: number) => {
         const token = getToken();
         const res = await fetch(`${API_BASE_ROOT}/books/return/${id}`, {
@@ -265,11 +267,9 @@ function AdminBookList() {
             headers: { 'Authorization': `Bearer ${token}` },
         });
         if(res.ok) {
-            alert("Book marked as returned.");
             fetchAllBooks();
         } else {
-            const data = await res.json();
-            alert(`Error: ${data.message}`);
+            console.error("Failed to return book");
         }
     };
 
@@ -331,7 +331,8 @@ function AdminBookList() {
                                 {book.status === 'borrowed' && (
                                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => handleReturn(book.book_id)}>Returned</Button>
                                 )}
-                                <Button size="sm" variant="outline" onClick={() => { setCurrentBook(book); setIsEditOpen(true); }}>Edit</Button>
+                                {/* Fixed Button Color: Added text-black */}
+                                <Button size="sm" variant="outline" className="text-black" onClick={() => { setCurrentBook(book); setIsEditOpen(true); }}>Edit</Button>
                                 
                                 {/* DELETE BOOK ALERT */}
                                 <AlertDialog>
@@ -382,14 +383,16 @@ export default function AdminPage() {
         return <div className="min-h-screen bg-[#2d3250] text-white p-6">Checking access...</div>;
     }
 
+    // Removed p-6 from the main wrapper, moved padding to content div
     return (
-        <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black p-6">
+        <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
             <header className="sticky top-0 z-50 w-full">
                 <div className="max-w-7xl px-4 sm:px-6 lg:px-8">
                     <NavBar />
                 </div>
             </header>
-            <div className="max-w-7xl mx-auto space-y-8 text-white pt-10">
+            {/* Added padding here instead */}
+            <div className="max-w-7xl mx-auto space-y-8 text-white pt-10 p-6">
                 <header className="flex justify-between items-center pb-4 border-b border-gray-600">
                     <h1 className="text-3xl font-bold" style={{ color: '#E1AA4C' }}>
                         ADMINISTRATION PANEL

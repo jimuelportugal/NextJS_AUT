@@ -1,4 +1,4 @@
-"use client"
+'use client';
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { getToken, logoutUser } from "@/lib/auth";
@@ -97,41 +97,41 @@ function BookCard({ title, cover, status, onBookAction, book_id }: { title: stri
 
 export default function ProfilePage() {
     const router = useRouter();
-    const token: string | null = getToken();
+    const [token, setToken] = useState<string | null>(null);
     const [borrowedBooks, setBorrowedBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<Status>({ message: '', type: null });
-    let username: string = 'User';
-    let userId: string | null = null;
+    const [username, setUsername] = useState<string>('User');
 
-    if (!token) {
-        router.push('/');
-        return null;
-    }
-    
-    try {
-        const decode: CustomJwtPayload = jwtDecode(token);
-        username = decode.username;
-        userId = decode.sub;
-    } catch (e) {
-        console.error("Token decoding failed", e);
-    }
+    useEffect(() => {
+        const storedToken = getToken();
+        if (!storedToken) {
+            router.push('/');
+        } else {
+            setToken(storedToken);
+            try {
+                const decode: CustomJwtPayload = jwtDecode(storedToken);
+                setUsername(decode.username);
+            } catch (e) {
+                console.error("Token decoding failed", e);
+            }
+        }
+    }, [router]);
 
     const dismissStatus = (): void => setStatus({ message: '', type: null });
 
-    const fetchBorrowedBooks = async (): Promise<void> => {
+    const fetchBorrowedBooks = async (currentToken: string): Promise<void> => {
         try {
             const res = await fetch(`${API_BASE_ROOT}/books/borrowed`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${currentToken}`,
                     'Content-Type': 'application/json',
                 },
             });
 
             if (!res.ok) {
                 const data = await res.json();
-                console.error("Failed to fetch borrowed books:", data.message);
                 throw new Error(data.message || "Failed to fetch books");
             }
 
@@ -145,6 +145,7 @@ export default function ProfilePage() {
     }
 
     const handleBookAction = async (bookId: number, action: 'cancel'): Promise<void> => {
+        if (!token) return;
         const endpoint: string = 'cancel';
         const actionVerb: string = 'cancel request';
         dismissStatus();
@@ -160,14 +161,12 @@ export default function ProfilePage() {
 
             if (!res.ok) {
                 const data = await res.json();
-                console.error(`Error: Failed to ${actionVerb} book.`, data.message);
                 setStatus({ message: data.message || `Failed to ${actionVerb} book.`, type: 'error' });
                 throw new Error(data.message || `Failed to ${actionVerb} book.`);
             }
 
-            console.log(`Action Success: Book ID ${bookId} successfully ${actionVerb}ed.`);
             setStatus({ message: `Success! Book ID ${bookId} successfully ${actionVerb}ed.`, type: 'success' });
-            await fetchBorrowedBooks(); 
+            await fetchBorrowedBooks(token); 
 
         } catch (err) {
             console.error(`Error: Could not ${actionVerb} book.`, (err as Error).message);
@@ -178,7 +177,9 @@ export default function ProfilePage() {
     };
     
     useEffect(() => {
-        fetchBorrowedBooks();
+        if (token) {
+            fetchBorrowedBooks(token);
+        }
     }, [token]);
 
     function handleLogout(): void {
@@ -194,7 +195,6 @@ export default function ProfilePage() {
         return <div className="min-h-screen bg-[#2d3250] text-red-400 p-6">Error: {error}</div>;
     }
     
-    // Fixed Layout Padding
     return (
         <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
             <header className="sticky top-0 z-50 w-full">
@@ -202,7 +202,6 @@ export default function ProfilePage() {
                     <NavBar />
                 </div>
             </header>
-            {/* Added padding here to replace the removed wrapper padding */}
             <div className="max-w-7xl mx-auto space-y-8 text-white pt-10 p-6">
                 <header className="flex justify-between items-center pb-4 border-b border-gray-600">
                     <h1 className="text-3xl font-bold">Welcome, {username}</h1>

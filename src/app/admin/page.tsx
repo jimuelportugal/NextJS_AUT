@@ -37,7 +37,6 @@ function AdminUserList() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     
-    // Form States
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<Partial<User>>({});
@@ -96,7 +95,6 @@ function AdminUserList() {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">Manage Users ({users.length})</h2>
-                {/* ADD USER DIALOG */}
                 <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                     <DialogTrigger asChild>
                         <Button>Add New User</Button>
@@ -124,7 +122,6 @@ function AdminUserList() {
                 </Dialog>
             </div>
 
-            {/* EDIT USER DIALOG */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="bg-[#424769] text-white border-gray-600">
                     <DialogHeader><DialogTitle>Edit User Role</DialogTitle></DialogHeader>
@@ -150,7 +147,6 @@ function AdminUserList() {
                             <span>{user.username} <span className="text-xs bg-gray-700 px-2 py-1 rounded ml-2">{user.role}</span></span>
                             <div className="flex gap-2">
                                 <Button size="sm" variant="outline" className="text-black" onClick={() => { setCurrentUser(user); setIsEditOpen(true); }}>Edit</Button>
-                                
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button size="sm" variant="destructive">Delete</Button>
@@ -181,13 +177,11 @@ function AdminBookList() {
     const [books, setBooks] = useState<Book[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    // Form States
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     
-    // REJECTION STATE (No more prompt)
+    // REJECTION STATE: ID Only
     const [isRejectOpen, setIsRejectOpen] = useState(false);
-    const [rejectReason, setRejectReason] = useState('');
     const [bookIdToReject, setBookIdToReject] = useState<number | null>(null);
 
     const [currentBook, setCurrentBook] = useState<Partial<Book>>({});
@@ -250,21 +244,18 @@ function AdminBookList() {
         fetchAllBooks();
     };
 
-    // OPEN REJECTION DIALOG (Replaces prompt)
     const openRejectDialog = (id: number) => {
         setBookIdToReject(id);
-        setRejectReason('');
         setIsRejectOpen(true);
     };
 
-    // SUBMIT REJECTION (The actual API call)
     const submitReject = async () => {
-        if (!bookIdToReject || !rejectReason) return;
+        if (!bookIdToReject) return;
         const token = getToken();
+        // REMOVED BODY: Just calling the endpoint with ID
         await fetch(`${API_BASE_ROOT}/books/reject/${bookIdToReject}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ reason: rejectReason }),
         });
         setIsRejectOpen(false);
         fetchAllBooks();
@@ -289,7 +280,6 @@ function AdminBookList() {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-white">Manage Books ({books.length})</h2>
-                {/* ADD BOOK DIALOG */}
                 <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                     <DialogTrigger asChild>
                         <Button>Add New Book</Button>
@@ -305,7 +295,6 @@ function AdminBookList() {
                 </Dialog>
             </div>
 
-            {/* EDIT BOOK DIALOG */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="bg-[#424769] text-white border-gray-600">
                     <DialogHeader><DialogTitle>Edit Book</DialogTitle></DialogHeader>
@@ -317,23 +306,26 @@ function AdminBookList() {
                 </DialogContent>
             </Dialog>
 
-            {/* REJECT BOOK DIALOG (The Fix) */}
-            <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
-                <DialogContent className="bg-[#424769] text-white border-gray-600">
-                    <DialogHeader><DialogTitle>Reject Request</DialogTitle></DialogHeader>
-                    <div className="py-4">
-                        <Input 
-                            placeholder="Enter reason for rejection" 
-                            value={rejectReason} 
-                            onChange={(e) => setRejectReason(e.target.value)} 
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsRejectOpen(false)} className="text-white hover:bg-white/20">Cancel</Button>
-                        <Button variant="destructive" onClick={submitReject}>Reject Book</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* REJECT DIALOG: CONFIRMATION ONLY - NO INPUT */}
+            <AlertDialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+                <AlertDialogContent className="bg-[#424769] text-white border-gray-600">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Reject Request</AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-300">
+                            Are you sure you want to reject this request?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-gray-600 text-white border-none hover:bg-gray-700">Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            className="bg-red-600 hover:bg-red-700" 
+                            onClick={submitReject}
+                        >
+                            Reject
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <div className="bg-[#424769] p-4 rounded-lg">
                 <ul className="text-gray-200 space-y-2">
@@ -409,7 +401,6 @@ export default function AdminPage() {
         return <div className="min-h-screen bg-[#2d3250] text-white p-6">Checking access...</div>;
     }
 
-    // FIXED: Removed p-6 here to fix the margin/padding issue on the Navbar
     return (
         <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
             <header className="sticky top-0 z-50 w-full">
@@ -418,7 +409,6 @@ export default function AdminPage() {
                 </div>
             </header>
             
-            {/* Added padding here instead */}
             <div className="max-w-7xl mx-auto space-y-8 text-white pt-10 p-6">
                 <header className="flex justify-between items-center pb-4 border-b border-gray-600">
                     <h1 className="text-3xl font-bold" style={{ color: '#E1AA4C' }}>

@@ -6,20 +6,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { API_BASE } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 
-interface jwtPayload {
-    sub: number;
-    username: string;
-    role: string;
-    exp: number;
-    iat: number;
-}
+function StatusMessage({ status, onDismiss }) {
+    if (!status.message) return null;
 
-interface Book {
-    book_id: number;
-    title: string;
-    image_link: string;
-    borrower_id: number | null;
-    status: 'available' | 'borrowed';
+    const baseClasses = "flex justify-between items-center p-4 rounded-lg text-white font-medium mb-6 transition-opacity duration-300";
+    const statusClasses = status.type === 'success' 
+        ? "bg-green-600" 
+        : "bg-red-600";
+
+    return (
+        <div className={`${baseClasses} ${statusClasses}`}>
+            <span>{status.message}</span>
+            <Button onClick={onDismiss} variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                &times;
+            </Button>
+        </div>
+    );
 }
 
 function BookCard({
@@ -27,15 +29,50 @@ function BookCard({
     title,
     cover,
     status,
-    onBorrow
-}: {
-    book_id: number,
-    title: string,
-    cover: string,
-    status: 'available' | 'borrowed',
-    onBorrow: (bookId: number) => void
+    onBookAction,
+    borrower_id, 
+    currentUserId
 }) {
-    const statusColor = status === 'available' ? 'text-green-400' : 'text-yellow-400';
+    let statusText = status.charAt(0).toUpperCase() + status.slice(1);
+    let statusColor = '';
+    let button = null;
+    
+    switch (status) {
+        case 'available':
+            statusColor = 'text-green-400';
+            statusText = 'Available';
+            button = (
+                <Button
+                    size="sm"
+                    className="w-full mt-1 bg-primary hover:bg-primary/80"
+                    onClick={() => onBookAction(book_id, 'request')}
+                >
+                    Request
+                </Button>
+            );
+            break;
+        case 'requested':
+            statusColor = 'text-yellow-400';
+            statusText = 'Requested (Pending)';
+            if (borrower_id === currentUserId) {
+                button = (
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        className="w-full mt-1 bg-red-600 hover:bg-red-700"
+                        onClick={() => onBookAction(book_id, 'cancel')}
+                    >
+                        Cancel Request
+                    </Button>
+                );
+            }
+            break;
+        case 'borrowed':
+            statusColor = 'text-red-400';
+            statusText = 'Borrowed';
+            break;
+    }
+
 
     return (
         <Card className="rounded-md border-none overflow-hidden bg-[#424769] transition-colors cursor-pointer w-full shadow-md">
@@ -50,17 +87,9 @@ function BookCard({
                 <div className="pt-1 pb-2 px-1 text-sm leading-tight space-y-1">
                     <p className="text-gray-200 font-medium truncate">{title}</p>
                     <p className={`text-xs font-semibold ${statusColor}`}>
-                        Status: {status.charAt(0).toUpperCase() + status.slice(1)}
+                        Status: {statusText}
                     </p>
-                    {status === 'available' && (
-                        <Button
-                            size="sm"
-                            className="w-full mt-1 bg-primary hover:bg-primary/80"
-                            onClick={() => onBorrow(book_id)}
-                        >
-                            Borrow
-                        </Button>
-                    )}
+                    {button}
                 </div>
             </CardContent>
         </Card>
@@ -69,21 +98,24 @@ function BookCard({
 
 export default function DashboardHome() {
     const token = getToken();
-    const [books, setBooks] = useState<Book[]>([]);
+    const [books, setBooks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [status, setStatus] = useState({ message: '', type: null });
     let username = 'Guest';
-    let userId: number | null = null;
+    let userId = null;
 
     if (token) {
         try {
-            const decode = jwtDecode<jwtPayload>(token);
+            const decode = jwtDecode(token);
             username = decode.username;
             userId = decode.sub;
         } catch (e) {
             console.error("Token decoding failed", e);
         }
     }
+    
+    const dismissStatus = () => setStatus({ message: '', type: null });
 
     const fetchAllBooks = async () => {
         if (!token) {
@@ -102,31 +134,37 @@ export default function DashboardHome() {
 
             if (!res.ok) {
                 const data = await res.json();
+                console.error("Failed to fetch all books:", data.message);
                 throw new Error(data.message || "Failed to fetch all books");
             }
 
-            const data: Book[] = await res.json();
+            const data = await res.json();
             const sortedBooks = data.sort((a, b) => {
-                if (a.status === 'available' && b.status === 'borrowed') return -1;
-                if (a.status === 'borrowed' && b.status === 'available') return 1;
+                if (a.status === 'available' && b.status !== 'available') return -1;
+                if (a.status !== 'available' && b.status === 'available') return 1;
                 return 0;
             });
             setBooks(sortedBooks);
-        } catch (err: any) {
+        } catch (err) {
             setError(err.message || "An unexpected error occurred while fetching books.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleBorrow = async (bookId: number) => {
+    const handleBookAction = async (bookId, action) => {
         if (!token || !userId) {
-            alert("You must be logged in to borrow a book.");
+            console.error("Authentication required to perform action.");
+            setStatus({ message: "Authentication required to perform action.", type: 'error' });
             return;
         }
+        
+        const endpoint = action === 'request' ? 'request' : 'cancel';
+        const actionVerb = action === 'request' ? 'request' : 'cancel request';
+        dismissStatus();
 
         try {
-            const res = await fetch(`${API_BASE}/books/borrow/${bookId}`, {
+            const res = await fetch(`${API_BASE}/books/${endpoint}/${bookId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -136,14 +174,20 @@ export default function DashboardHome() {
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.message || "Failed to borrow book.");
+                console.error(`Error: Failed to ${actionVerb} book.`, data.message);
+                setStatus({ message: data.message || `Failed to ${actionVerb} book.`, type: 'error' });
+                throw new Error(data.message || `Failed to ${actionVerb} book.`);
             }
 
-            alert(`Book ID ${bookId} successfully borrowed!`);
-            await fetchAllBooks();
+            console.log(`Action Success: Book ID ${bookId} successfully ${actionVerb}ed.`);
+            setStatus({ message: `Success! Book ID ${bookId} successfully ${actionVerb}ed.`, type: 'success' });
+            await fetchAllBooks(); 
 
-        } catch (err: any) {
-            alert(`Error borrowing book: ${err.message}`);
+        } catch (err) {
+            console.error(`Error: Could not ${actionVerb} book.`, err.message);
+            if (!status.message) {
+                setStatus({ message: `Error: Could not complete ${actionVerb}.`, type: 'error' });
+            }
         }
     };
 
@@ -160,7 +204,8 @@ export default function DashboardHome() {
     }
 
     return (
-        <div className="space-y-6">   
+        <div className="space-y-6"> 
+            <StatusMessage status={status} onDismiss={dismissStatus} />  
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
                 {books.length === 0 ? (
                     <p className="text-white col-span-full">No books found in the library.</p>
@@ -172,7 +217,9 @@ export default function DashboardHome() {
                             title={book.title}
                             cover={book.image_link}
                             status={book.status}
-                            onBorrow={handleBorrow}
+                            onBookAction={handleBookAction}
+                            borrower_id={book.borrower_id}
+                            currentUserId={userId}
                         />
                     ))
                 )}
@@ -187,4 +234,4 @@ export default function DashboardHome() {
             </div>
         </div>
     );
-}   
+}

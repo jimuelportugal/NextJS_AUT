@@ -10,16 +10,10 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import { getToken, isAdmin } from "@/lib/auth"
 
-interface NavLinkProps {
-  href: string
-  children: React.ReactNode
-  className?: string
-  prefetch?: boolean
-}
-export function NavBar() {
-  const pathname = usePathname()
-  const NavLink = ({ href, children, className = "", prefetch }: NavLinkProps) => {
+function NavLink({ href, children, className = "", prefetch }) {
+    const pathname = usePathname()
     const isActive = pathname === href
     const baseClasses = navigationMenuTriggerStyle() + ' px-3 py-2 rounded-lg'
     const activeClasses = isActive 
@@ -36,12 +30,25 @@ export function NavBar() {
       </NavigationMenuItem>
     )
   }
-
+  
+export function NavBar() {
+  const isLoggedIn = !!getToken();
+  const userIsAdmin = isAdmin();
+  
   return (
     <NavigationMenu className="w-full">
       <NavigationMenuList className="flex-wrap justify-start p-0 -ml-4 mt-1">
-        <NavLink href="/profile" >Profile</NavLink>
-        <NavLink href="/dashboard" >Books</NavLink>
+        {isLoggedIn ? (
+          <>
+            <NavLink href="/dashboard" >Books</NavLink>
+            <NavLink href="/profile" >Profile</NavLink>
+            {userIsAdmin && (
+              <NavLink href="/admin" >Admin Panel</NavLink>
+            )}
+          </>
+        ) : (
+          <NavLink href="/" >Home</NavLink>
+        )}
         <NavLink href="/about" >About</NavLink>
         <NavLink href="/contact" prefetch={false} >Contact</NavLink> 
       </NavigationMenuList>

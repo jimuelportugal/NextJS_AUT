@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { API_BASE } from "@/lib/config";
 import { jwtDecode } from "jwt-decode";
 
-const API_BASE_ROOT = API_BASE.replace('/auth', '');
+const API_BASE_ROOT: string = API_BASE.replace('/auth', '');
 
 interface User { id: number, username: string, role: string }
 interface Book { book_id: number, title: string, status: 'available' | 'requested' | 'borrowed', borrower_id: number | null }

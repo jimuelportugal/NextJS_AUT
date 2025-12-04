@@ -1,6 +1,7 @@
-'use client';
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { getToken, logoutUser } from "@/lib/auth";
+import type { CustomJwtPayload } from "@/lib/auth"; // FIX: Added import type
 import { Card, CardContent } from "@/components/ui/card";
 import { API_BASE } from "@/lib/config";
 import { useRouter } from "next/navigation";
@@ -10,10 +11,41 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE_ROOT = API_BASE.replace('/auth', '');
 
-function BookCard({ title, cover, status, onBookAction, book_id }) {
-    let statusText = status.charAt(0).toUpperCase() + status.slice(1);
-    let statusColor = '';
-    let button = null;
+interface Book {
+    book_id: number;
+    title: string;
+    image_link: string;
+    borrower_id: number | null;
+    status: 'available' | 'requested' | 'borrowed';
+}
+
+interface Status {
+    message: string;
+    type: 'success' | 'error' | null;
+}
+
+function StatusMessage({ status, onDismiss }: { status: Status, onDismiss: () => void }) {
+    if (!status.message) return null;
+
+    const baseClasses = "flex justify-between items-center p-4 rounded-lg text-white font-medium mb-6 transition-opacity duration-300";
+    const statusClasses = status.type === 'success' 
+        ? "bg-green-600" 
+        : "bg-red-600";
+
+    return (
+        <div className={`${baseClasses} ${statusClasses}`}>
+            <span>{status.message}</span>
+            <Button onClick={onDismiss} variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                &times;
+            </Button>
+        </div>
+    );
+}
+
+function BookCard({ title, cover, status, onBookAction, book_id }: { title: string, cover: string, status: 'available' | 'requested' | 'borrowed', onBookAction: (bookId: number, action: 'cancel') => void, book_id: number }) {
+    let statusText: string = status.charAt(0).toUpperCase() + status.slice(1);
+    let statusColor: string = '';
+    let button: React.JSX.Element | null = null;
     
     switch (status) {
         case 'requested':
@@ -64,13 +96,13 @@ function BookCard({ title, cover, status, onBookAction, book_id }) {
 
 export default function ProfilePage() {
     const router = useRouter();
-    const token = getToken();
-    const [borrowedBooks, setBorrowedBooks] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [status, setStatus] = useState({ message: '', type: null });
-    let username = 'User';
-    let userId = null;
+    const token: string | null = getToken();
+    const [borrowedBooks, setBorrowedBooks] = useState<Book[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [status, setStatus] = useState<Status>({ message: '', type: null });
+    let username: string = 'User';
+    let userId: string | null = null;
 
     if (!token) {
         router.push('/');
@@ -78,16 +110,16 @@ export default function ProfilePage() {
     }
     
     try {
-        const decode = jwtDecode(token);
+        const decode: CustomJwtPayload = jwtDecode(token);
         username = decode.username;
         userId = decode.sub;
     } catch (e) {
         console.error("Token decoding failed", e);
     }
 
-    const dismissStatus = () => setStatus({ message: '', type: null });
+    const dismissStatus = (): void => setStatus({ message: '', type: null });
 
-    const fetchBorrowedBooks = async () => {
+    const fetchBorrowedBooks = async (): Promise<void> => {
         try {
             const res = await fetch(`${API_BASE_ROOT}/books/borrowed`, {
                 headers: {
@@ -102,18 +134,18 @@ export default function ProfilePage() {
                 throw new Error(data.message || "Failed to fetch books");
             }
 
-            const data = await res.json();
+            const data: Book[] = await res.json();
             setBorrowedBooks(data);
-        } catch (err) {
-            setError(err.message || "An unexpected error occurred.");
+        } catch (err: any) {
+            setError((err as Error).message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
     }
 
-    const handleBookAction = async (bookId, action) => {
-        const endpoint = action === 'request' ? 'request' : 'cancel';
-        const actionVerb = action === 'request' ? 'request' : 'cancel request';
+    const handleBookAction = async (bookId: number, action: 'cancel'): Promise<void> => {
+        const endpoint: string = 'cancel';
+        const actionVerb: string = 'cancel request';
         dismissStatus();
 
         try {
@@ -137,7 +169,7 @@ export default function ProfilePage() {
             await fetchBorrowedBooks(); 
 
         } catch (err) {
-            console.error(`Error: Could not ${actionVerb} book.`, err.message);
+            console.error(`Error: Could not ${actionVerb} book.`, (err as Error).message);
             if (!status.message) {
                 setStatus({ message: `Error: Could not complete ${actionVerb}.`, type: 'error' });
             }
@@ -148,7 +180,7 @@ export default function ProfilePage() {
         fetchBorrowedBooks();
     }, [token]);
 
-    function handleLogout() {
+    function handleLogout(): void {
         logoutUser();
         router.push('/');
     }

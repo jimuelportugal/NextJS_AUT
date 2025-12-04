@@ -1,12 +1,36 @@
-'use client';
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { getToken } from "@/lib/auth";
+import type { CustomJwtPayload } from "@/lib/auth";
 import { jwtDecode } from "jwt-decode";
 import { Card, CardContent } from "@/components/ui/card";
 import { API_BASE } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 
-function StatusMessage({ status, onDismiss }) {
+interface Book {
+    book_id: number;
+    title: string;
+    image_link: string;
+    borrower_id: number | null;
+    status: 'available' | 'requested' | 'borrowed';
+}
+
+interface Status {
+    message: string;
+    type: 'success' | 'error' | null;
+}
+
+interface BookCardProps {
+    book_id: number;
+    title: string;
+    cover: string;
+    status: 'available' | 'requested' | 'borrowed';
+    onBookAction: (bookId: number, action: 'request' | 'cancel') => void;
+    borrower_id: number | null;
+    currentUserId: string | null;
+}
+
+function StatusMessage({ status, onDismiss }: { status: Status, onDismiss: () => void }) {
     if (!status.message) return null;
 
     const baseClasses = "flex justify-between items-center p-4 rounded-lg text-white font-medium mb-6 transition-opacity duration-300";
@@ -32,11 +56,13 @@ function BookCard({
     onBookAction,
     borrower_id, 
     currentUserId
-}) {
-    let statusText = status.charAt(0).toUpperCase() + status.slice(1);
-    let statusColor = '';
-    let button = null;
+}: BookCardProps) {
+    let statusText: string = status.charAt(0).toUpperCase() + status.slice(1);
+    let statusColor: string = '';
+    let button: React.JSX.Element | null = null;
     
+    const currentUserIdNum: number | null = currentUserId ? Number(currentUserId) : null;
+
     switch (status) {
         case 'available':
             statusColor = 'text-green-400';
@@ -54,7 +80,7 @@ function BookCard({
         case 'requested':
             statusColor = 'text-yellow-400';
             statusText = 'Requested (Pending)';
-            if (borrower_id === currentUserId) {
+            if (borrower_id === currentUserIdNum) {
                 button = (
                     <Button
                         size="sm"
@@ -97,17 +123,17 @@ function BookCard({
 }
 
 export default function DashboardHome() {
-    const token = getToken();
-    const [books, setBooks] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [status, setStatus] = useState({ message: '', type: null });
-    let username = 'Guest';
-    let userId = null;
+    const token: string | null = getToken();
+    const [books, setBooks] = useState<Book[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [status, setStatus] = useState<Status>({ message: '', type: null });
+    let username: string = 'Guest';
+    let userId: string | null = null;
 
     if (token) {
         try {
-            const decode = jwtDecode(token);
+            const decode: CustomJwtPayload = jwtDecode(token);
             username = decode.username;
             userId = decode.sub;
         } catch (e) {
@@ -115,9 +141,9 @@ export default function DashboardHome() {
         }
     }
     
-    const dismissStatus = () => setStatus({ message: '', type: null });
+    const dismissStatus = (): void => setStatus({ message: '', type: null });
 
-    const fetchAllBooks = async () => {
+    const fetchAllBooks = async (): Promise<void> => {
         if (!token) {
             setLoading(false);
             setError("Not authenticated.");
@@ -138,29 +164,29 @@ export default function DashboardHome() {
                 throw new Error(data.message || "Failed to fetch all books");
             }
 
-            const data = await res.json();
+            const data: Book[] = await res.json();
             const sortedBooks = data.sort((a, b) => {
                 if (a.status === 'available' && b.status !== 'available') return -1;
                 if (a.status !== 'available' && b.status === 'available') return 1;
                 return 0;
             });
             setBooks(sortedBooks);
-        } catch (err) {
-            setError(err.message || "An unexpected error occurred while fetching books.");
+        } catch (err: any) {
+            setError((err as Error).message || "An unexpected error occurred while fetching books.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleBookAction = async (bookId, action) => {
+    const handleBookAction = async (bookId: number, action: 'request' | 'cancel'): Promise<void> => {
         if (!token || !userId) {
             console.error("Authentication required to perform action.");
             setStatus({ message: "Authentication required to perform action.", type: 'error' });
             return;
         }
         
-        const endpoint = action === 'request' ? 'request' : 'cancel';
-        const actionVerb = action === 'request' ? 'request' : 'cancel request';
+        const endpoint: string = action === 'request' ? 'request' : 'cancel';
+        const actionVerb: string = action === 'request' ? 'request' : 'cancel request';
         dismissStatus();
 
         try {
@@ -184,7 +210,7 @@ export default function DashboardHome() {
             await fetchAllBooks(); 
 
         } catch (err) {
-            console.error(`Error: Could not ${actionVerb} book.`, err.message);
+            console.error(`Error: Could not ${actionVerb} book.`, (err as Error).message);
             if (!status.message) {
                 setStatus({ message: `Error: Could not complete ${actionVerb}.`, type: 'error' });
             }

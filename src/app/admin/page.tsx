@@ -1,7 +1,8 @@
-'use client';
+import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { isAdmin, logoutUser, getToken } from "@/lib/auth";
+import type { CustomJwtPayload } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,14 +11,20 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE_ROOT = API_BASE.replace('/auth', '');
 
-function AdminUserList() {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+interface User { id: number, username: string, role: string }
+interface Book { book_id: number, title: string, status: 'available' | 'requested' | 'borrowed', borrower_id: number | null }
 
-    const fetchUsers = async () => {
-        const token = getToken();
-        if (!token) return;
+function AdminUserList() {
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchUsers = async (): Promise<void> => {
+        const token: string | null = getToken();
+        if (!token) {
+            setLoading(false);
+            return;
+        }
 
         try {
             const res = await fetch(`${API_BASE_ROOT}/users`, {
@@ -29,10 +36,10 @@ function AdminUserList() {
                 throw new Error(data.message || "Failed to fetch users");
             }
 
-            const data = await res.json();
+            const data: User[] = await res.json();
             setUsers(data);
-        } catch (err) {
-            setError(err.message || "An unexpected error occurred.");
+        } catch (err: any) {
+            setError((err as Error).message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
@@ -42,13 +49,12 @@ function AdminUserList() {
         fetchUsers();
     }, []);
 
-    const handleAction = async (userId, action) => {
+    const handleAction = async (userId: number, action: 'delete' | 'edit'): Promise<void> => {
         if (action === 'delete') {
             if (!confirm(`Are you sure you want to delete User ID ${userId}?`)) return;
         }
         
-        console.log(`Admin action: ${action} user ${userId}`);
-        console.log("Admin action simulated. Implement PUT/DELETE /users/:id calls.");
+        console.log(`Admin action: ${action} user ${userId}. (Simulated)`);
         fetchUsers();
     }
 
@@ -78,12 +84,12 @@ function AdminUserList() {
 }
 
 function AdminBookList() {
-    const [books, setBooks] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [books, setBooks] = useState<Book[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     
-    const fetchAllBooks = async () => {
-        const token = getToken();
+    const fetchAllBooks = async (): Promise<void> => {
+        const token: string | null = getToken();
         if (!token) return;
 
         try {
@@ -94,30 +100,29 @@ function AdminBookList() {
                 const data = await res.json();
                 throw new Error(data.message || "Failed to fetch books");
             }
-            const data = await res.json();
+            const data: Book[] = await res.json();
             setBooks(data);
-        } catch (err) {
-            setError(err.message || "An unexpected error occurred.");
+        } catch (err: any) {
+            setError((err as Error).message || "An unexpected error occurred.");
         } finally {
             setLoading(false);
         }
     };
     
-    const handleAction = async (bookId, action) => {
+    const handleAction = async (bookId: number, action: 'delete' | 'edit'): Promise<void> => {
         if (action === 'delete') {
             if (!confirm(`Are you sure you want to delete Book ID ${bookId}?`)) return;
         }
         
-        console.log(`Admin action: ${action} book ${bookId}`);
-        console.log("Admin book action simulated. Implement POST/PUT/DELETE /books/:id calls.");
+        console.log(`Admin action: ${action} book ${bookId}. (Simulated)`);
         fetchAllBooks();
     }
     
-    const handleReject = async (bookId) => {
-        const reason = prompt("Enter reason for rejecting the request:");
+    const handleReject = async (bookId: number): Promise<void> => {
+        const reason: string | null = prompt("Enter reason for rejecting the request:");
         if (reason === null) return; 
 
-        const token = getToken();
+        const token: string | null = getToken();
         try {
             const res = await fetch(`${API_BASE_ROOT}/books/reject/${bookId}`, {
                 method: 'POST',
@@ -137,13 +142,13 @@ function AdminBookList() {
             console.log(`Rejection successful for Book ID ${bookId}. Notification sent to user.`);
             fetchAllBooks();
 
-        } catch (err) {
-            console.error(`Error rejecting request:`, err.message);
+        } catch (err: any) {
+            console.error(`Error rejecting request:`, (err as Error).message);
         }
     }
     
-    const handleApprove = async (bookId) => {
-        const token = getToken();
+    const handleApprove = async (bookId: number): Promise<void> => {
+        const token: string | null = getToken();
         try {
             const res = await fetch(`${API_BASE_ROOT}/books/${bookId}`, {
                 method: 'PUT',
@@ -163,8 +168,8 @@ function AdminBookList() {
             console.log(`Approval successful for Book ID ${bookId}. Status changed to 'borrowed'.`);
             fetchAllBooks();
 
-        } catch (err) {
-            console.error(`Error approving request:`, err.message);
+        } catch (err: any) {
+            console.error(`Error approving request:`, (err as Error).message);
         }
     }
 
@@ -205,7 +210,7 @@ function AdminBookList() {
 
 export default function AdminPage() {
     const router = useRouter();
-    const [accessChecked, setAccessChecked] = useState(false);
+    const [accessChecked, setAccessChecked] = useState<boolean>(false);
 
     useEffect(() => {
         if (!isAdmin()) {
@@ -216,7 +221,7 @@ export default function AdminPage() {
         }
     }, [router]);
 
-    function handleLogout() {
+    function handleLogout(): void {
         logoutUser();
         router.push('/');
     }

@@ -154,7 +154,6 @@ export default function Home() {
                                         <RegisterForm setActiveTab={setActiveTab} />
                                     </TabsContent>
                                 </Tabs>
-                                <p>TEXT</p>
                             </div>
                         </div>
                     </CardContent>

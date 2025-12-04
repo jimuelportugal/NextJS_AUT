@@ -149,19 +149,17 @@ function AdminUserList() {
                         <li key={user.id} className="flex justify-between items-center p-2 border-b border-[#2d3250]">
                             <span>{user.username} <span className="text-xs bg-gray-700 px-2 py-1 rounded ml-2">{user.role}</span></span>
                             <div className="flex gap-2">
-                                {/* Fixed Button Color: Added text-black */}
                                 <Button size="sm" variant="outline" className="text-black" onClick={() => { setCurrentUser(user); setIsEditOpen(true); }}>Edit</Button>
                                 
-                                {/* DELETE CONFIRMATION - Using Alert Dialog */}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button size="sm" variant="destructive">Delete</Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent className="bg-[#424769] text-white border-gray-600">
                                         <AlertDialogHeader>
-                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                            <AlertDialogTitle>Delete User?</AlertDialogTitle>
                                             <AlertDialogDescription className="text-gray-300">
-                                                This action cannot be undone. This will permanently delete the user <b>{user.username}</b>.
+                                                This will permanently delete <b>{user.username}</b>.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
@@ -186,6 +184,12 @@ function AdminBookList() {
     // Form States
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    
+    // REJECTION STATE (No more prompt)
+    const [isRejectOpen, setIsRejectOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
+    const [bookIdToReject, setBookIdToReject] = useState<number | null>(null);
+
     const [currentBook, setCurrentBook] = useState<Partial<Book>>({});
     const [newBook, setNewBook] = useState({ title: '', image_link: '' });
 
@@ -246,20 +250,26 @@ function AdminBookList() {
         fetchAllBooks();
     };
 
-    const handleReject = async (id: number) => {
-        // We still use prompt here for simplicity of input, but removed alert()
-        const reason = prompt("Enter rejection reason:");
-        if(!reason) return;
+    // OPEN REJECTION DIALOG (Replaces prompt)
+    const openRejectDialog = (id: number) => {
+        setBookIdToReject(id);
+        setRejectReason('');
+        setIsRejectOpen(true);
+    };
+
+    // SUBMIT REJECTION (The actual API call)
+    const submitReject = async () => {
+        if (!bookIdToReject || !rejectReason) return;
         const token = getToken();
-        await fetch(`${API_BASE_ROOT}/books/reject/${id}`, {
+        await fetch(`${API_BASE_ROOT}/books/reject/${bookIdToReject}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ reason }),
+            body: JSON.stringify({ reason: rejectReason }),
         });
+        setIsRejectOpen(false);
         fetchAllBooks();
     };
 
-    // Removed the alert() call here
     const handleReturn = async (id: number) => {
         const token = getToken();
         const res = await fetch(`${API_BASE_ROOT}/books/return/${id}`, {
@@ -307,6 +317,24 @@ function AdminBookList() {
                 </DialogContent>
             </Dialog>
 
+            {/* REJECT BOOK DIALOG (The Fix) */}
+            <Dialog open={isRejectOpen} onOpenChange={setIsRejectOpen}>
+                <DialogContent className="bg-[#424769] text-white border-gray-600">
+                    <DialogHeader><DialogTitle>Reject Request</DialogTitle></DialogHeader>
+                    <div className="py-4">
+                        <Input 
+                            placeholder="Enter reason for rejection" 
+                            value={rejectReason} 
+                            onChange={(e) => setRejectReason(e.target.value)} 
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsRejectOpen(false)} className="text-white hover:bg-white/20">Cancel</Button>
+                        <Button variant="destructive" onClick={submitReject}>Reject Book</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="bg-[#424769] p-4 rounded-lg">
                 <ul className="text-gray-200 space-y-2">
                     {books.map(book => (
@@ -325,16 +353,14 @@ function AdminBookList() {
                                 {book.status === 'requested' && (
                                     <>
                                         <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleApprove(book.book_id)}>Approve</Button>
-                                        <Button size="sm" variant="destructive" onClick={() => handleReject(book.book_id)}>Reject</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => openRejectDialog(book.book_id)}>Reject</Button>
                                     </>
                                 )}
                                 {book.status === 'borrowed' && (
                                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => handleReturn(book.book_id)}>Returned</Button>
                                 )}
-                                {/* Fixed Button Color: Added text-black */}
                                 <Button size="sm" variant="outline" className="text-black" onClick={() => { setCurrentBook(book); setIsEditOpen(true); }}>Edit</Button>
                                 
-                                {/* DELETE BOOK ALERT */}
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                         <Button size="sm" variant="destructive">Delete</Button>
@@ -383,7 +409,7 @@ export default function AdminPage() {
         return <div className="min-h-screen bg-[#2d3250] text-white p-6">Checking access...</div>;
     }
 
-    // Removed p-6 from the main wrapper, moved padding to content div
+    // FIXED: Removed p-6 here to fix the margin/padding issue on the Navbar
     return (
         <div className="min-h-screen font-sans bg-[#2d3250] dark:bg-black">
             <header className="sticky top-0 z-50 w-full">
@@ -391,6 +417,7 @@ export default function AdminPage() {
                     <NavBar />
                 </div>
             </header>
+            
             {/* Added padding here instead */}
             <div className="max-w-7xl mx-auto space-y-8 text-white pt-10 p-6">
                 <header className="flex justify-between items-center pb-4 border-b border-gray-600">

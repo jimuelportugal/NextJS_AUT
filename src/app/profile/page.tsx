@@ -201,7 +201,7 @@ export default function ProfilePage() {
                     <NavBar />
                 </div>
             </header>
-            <div className="max-w-7xl mx-auto space-y-8 text-white pt-10">
+            <div className="max-w-7xl mx-auto space-y-8 text-white">
                 <header className="flex justify-between items-center pb-4 border-b border-gray-600">
                     <h1 className="text-3xl font-bold">Welcome, {username}</h1>
                     <Button variant="destructive" onClick={handleLogout}>Logout</Button>
